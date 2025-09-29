@@ -1,0 +1,93 @@
+// ignore_for_file: avoid_print
+
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:aj_maintain/constant/constant.dart';
+import 'package:aj_maintain/model/model.dart';
+
+class RetailerService {
+  FirebaseFirestore firebase = FirebaseFirestore.instance;
+
+  /// Fetch all staff
+  Future<List<RetailerModel>> getRetailer() async {
+    final querySnapshot = await firebase
+        .collection(Constants.retailer_table)
+        .get();
+    final retailer = querySnapshot.docs
+        .map((doc) => RetailerModel.fromJson(doc.data()))
+        .toList();
+    return retailer;
+  }
+
+  Future getRetailersPercentage(String retailerId) async {
+    try {
+      final querySnapshot = await firebase
+          .collection(Constants.retailer_table)
+          .where('retailerId', isEqualTo: retailerId)
+          .get();
+
+      if (querySnapshot.docs.isNotEmpty) {
+        var percent = querySnapshot.docs.first.data()['percentage'];
+        return {'percentage': percent};
+      } else {
+        return {'percentage': 0};
+      }
+    } catch (e) {
+      print('Error fetching retailer percentage: $e');
+      return {'percentage': 0};
+    }
+  }
+
+  Future<List<RetailerModel>> getReturnRetailer() async {
+    final querySnapshot = await firebase
+        .collection(Constants.assign_header_table)
+        .where('status', isEqualTo: 'assigned')
+        .get();
+
+    // collect retailer IDs from assign_header_table
+    final retailerIds = querySnapshot.docs
+        .map((doc) => doc.data()['retailer_id'] as String?)
+        .toList();
+
+    print('retailerIds: $retailerIds');
+
+    if (retailerIds.isEmpty) {
+      return [];
+    }
+
+    // query retailer_table with those IDs
+    final retailerQuery = await firebase
+        .collection(Constants.retailer_table)
+        .where('retailerId', whereIn: retailerIds)
+        .get();
+
+    // build retailer models from retailer_table
+    final retailers = retailerQuery.docs
+        .map((doc) => RetailerModel.fromJson(doc.data()))
+        .toList();
+
+    return retailers;
+  }
+
+  Future<double> getRetailerAdvance(String retailerId) async {
+    try {
+      final querySnapshot = await firebase
+          .collection(Constants.receipt_table)
+          .where('status', isEqualTo: '0')
+          .where('retailer_id', isEqualTo: retailerId)
+          .get();
+      double total = 0;
+      if (querySnapshot.docs.isNotEmpty) {
+        for (var doc in querySnapshot.docs) {
+          final amount = double.tryParse(doc.data()['amount'].toString()) ?? 0;
+          total += amount;
+        }
+        return total;
+      } else {
+        return 0;
+      }
+    } catch (e) {
+      print('Error fetching retailer percentage: $e');
+      return 0;
+    }
+  }
+}
