@@ -56,37 +56,27 @@ class _ReturnProductUpdateState extends State<ReturnProductUpdate> {
     setState(() => isLoading = false);
   }
 
-  Future<void> previewReturnReceipt(
-    Map<String, dynamic>? header,
-    List<Map<String, dynamic>> details,
-  ) async {
-    final pdfBytes = await PdfService.generateReturnReceiptPdf(header, details);
-    await Printing.layoutPdf(onLayout: (format) async => pdfBytes);
-  }
+  // Future<void> previewReturnReceipt(
+  //   Map<String, dynamic>? header,
+  //   List<Map<String, dynamic>> details,
+  // ) async {
+  //   final pdfBytes = await PdfService.generateReturnReceiptPdf(header, details);
+  //   await Printing.layoutPdf(onLayout: (format) async => pdfBytes);
+  // }
 
-  Future<void> printReturnReceipt(
-    Map<String, dynamic>? header,
-    List<Map<String, dynamic>> details,
-  ) async {
-    final pdfBytes = await PdfService.generateReturnReceiptPdf(header, details);
+ Future<void> printReturnReceipt(
+  BuildContext context,
+  Map<String, dynamic>? header,
+  List<Map<String, dynamic>> details,
+) async {
+  // 🟩 OPTION 1: Direct Thermal (faster)
+  await PdfService.printThermalReceipt(
+    context: context,
+    header: header!,
+    details: details,
+  );
+}
 
-    final firstPage = await (Printing.raster(pdfBytes, dpi: 300)).first;
-    final pngBytes = await firstPage.toPng();
-
-    BlueThermalPrinter printer = BlueThermalPrinter.instance;
-    bool? connected = await printer.isConnected;
-    if (connected != true) {
-      List<BluetoothDevice> devices = await printer.getBondedDevices();
-      BluetoothDevice target = devices.firstWhere(
-        (d) => d.name!.contains("KP306A-UB"),
-        orElse: () => devices.first,
-      );
-      await printer.connect(target);
-    }
-
-    await printer.printImageBytes(pngBytes);
-    await printer.disconnect();
-  }
 
   Future<void> updateReturn() async {
     double total = details.fold(
@@ -148,7 +138,7 @@ class _ReturnProductUpdateState extends State<ReturnProductUpdate> {
           IconButton(
             icon: Icon(Icons.print, color: AppTheme.appTheme.indicatorColor),
             onPressed: () async {
-              await printReturnReceipt(header, details);
+              await printReturnReceipt(context, header, details);
             },
           ),
           IconButton(icon: const Icon(Icons.check), onPressed: updateReturn),

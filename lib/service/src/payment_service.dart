@@ -62,16 +62,81 @@ class PaymentService {
       final newHeader = await headerRef.add({
         "bill_no": billNo,
         "retailer_id": retailerId,
-        "retailer_name" : retailerName,
+        "retailer_name": retailerName,
         "date": date,
         "amount": amount,
         "status": "0",
         "createdDateTime": DateTime.now().toString().substring(0, 19),
         "updateDateTime": DateTime.now().toString().substring(0, 19),
       });
-     
 
       return true;
+    } catch (e) {
+      return false;
+    }
+  }
+
+  Future<Map<String, dynamic>> getReceiptDetail(String billNo) async {
+    try {
+      final receiptCollection = firebase.collection(Constants.receipt_table);
+
+      final query = await receiptCollection.doc(billNo).get();
+
+      if (!query.exists) {
+        return {
+          "success": false,
+          "error": "No return found for bill_no $billNo",
+        };
+      }
+
+      final receiptDoc = query;
+
+      return {
+        "status": true,
+        "header": {
+          "id": receiptDoc.id,
+          "bill_no": receiptDoc["bill_no"],
+          "retailer_id": receiptDoc["retailer_id"],
+          "retailer_name": receiptDoc['retailer_name'],
+          "date": receiptDoc["date"],
+          "amount": receiptDoc["amount"],
+          "status": receiptDoc["status"],
+        },
+      };
+    } catch (e) {
+      return {"status": false, "error": e.toString()};
+    }
+  }
+
+  Future<bool> updateReceipt({
+    required String receiptId,
+    required String retailerId,
+    required String date,
+    required int amount,
+  }) async {
+    try {
+      final headerCollection = firebase.collection(Constants.receipt_table);
+      if (receiptId.isNotEmpty) {
+        var retailerSnap = await firebase
+            .collection(Constants.retailer_table)
+            .where("retailerId", isEqualTo: retailerId)
+            .get();
+
+        String retailerName = retailerSnap.docs.isNotEmpty
+            ? retailerSnap.docs.first.data()["name"] ?? ""
+            : "";
+        // 🔄 Update existing return
+        await headerCollection.doc(receiptId).update({
+          "retailer_id": retailerId,
+          "date": date,
+          "retailer_name": retailerName,
+          "amount": amount,
+          "updateDateTime": DateTime.now().toString().substring(0, 19),
+        });
+        return true;
+      } else {
+        return false;
+      }
     } catch (e) {
       return false;
     }

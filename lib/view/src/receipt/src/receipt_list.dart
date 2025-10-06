@@ -130,7 +130,7 @@ class _ReceiptListState extends State<ReceiptList> {
                         context,
                         MaterialPageRoute(
                           builder: (_) =>
-                              AssignProductUpdate(id: item['id']),
+                              ReceiptUpdate(receiptId: item['id']),
                         ),
                       );
                     },

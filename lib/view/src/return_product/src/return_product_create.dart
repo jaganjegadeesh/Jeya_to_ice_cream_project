@@ -28,6 +28,7 @@ class _ReturnProductCreateState extends State<ReturnProductCreate> {
   bool ischangeRetailer = false;
   double percent = 0.0;
   double? advance; 
+  bool isSubmit = false;
 
   @override
   void initState() {
@@ -103,10 +104,12 @@ class _ReturnProductCreateState extends State<ReturnProductCreate> {
   double get advanceTotal => total - advance!;
 
   Future<void> submitReturn() async {
+    setState(() => isSubmit = true);
     if (selectedRetailerId == null) {
       ScaffoldMessenger.of(
         context,
       ).showSnackBar(const SnackBar(content: Text("Please select a retailer")));
+      setState(() => isSubmit = false);
       return;
     }
     final confirm = await showDialog<bool>(
@@ -127,7 +130,10 @@ class _ReturnProductCreateState extends State<ReturnProductCreate> {
       ),
     );
 
-    if (confirm != true) return;
+    if (confirm != true)  { 
+      setState(() => isSubmit = false); 
+      return; 
+    }
     final response = await _returnService.saveReturn(
       retailerId: selectedRetailerId!,
       date: DateFormat('yyyy-MM-dd').format(selectedDate),
@@ -148,6 +154,7 @@ class _ReturnProductCreateState extends State<ReturnProductCreate> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text(response['error'] ?? 'Submission failed')),
       );
+      setState(() => isSubmit = false);
     }
   }
 
@@ -166,6 +173,9 @@ class _ReturnProductCreateState extends State<ReturnProductCreate> {
           style: TextStyle(color: AppTheme.appTheme.indicatorColor),
         ),
         actions: [
+          isSubmit
+          ? const Center(child: CircularProgressIndicator())
+          :
           IconButton(icon: const Icon(Icons.check), onPressed: submitReturn),
         ],
       ),
