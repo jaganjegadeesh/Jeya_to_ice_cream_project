@@ -32,7 +32,6 @@ class RetailerService {
         return {'percentage': 0};
       }
     } catch (e) {
-      print('Error fetching retailer percentage: $e');
       return {'percentage': 0};
     }
   }
@@ -47,8 +46,6 @@ class RetailerService {
     final retailerIds = querySnapshot.docs
         .map((doc) => doc.data()['retailer_id'] as String?)
         .toList();
-
-    print('retailerIds: $retailerIds');
 
     if (retailerIds.isEmpty) {
       return [];
@@ -86,7 +83,6 @@ class RetailerService {
         return 0;
       }
     } catch (e) {
-      print('Error fetching retailer percentage: $e');
       return 0;
     }
   }

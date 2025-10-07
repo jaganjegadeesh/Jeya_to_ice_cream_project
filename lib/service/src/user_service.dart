@@ -31,7 +31,6 @@ class UserService {
       }
       return true;
     } catch (e) {
-      print('Error deleting user: $e');
       return false;
     }
   }

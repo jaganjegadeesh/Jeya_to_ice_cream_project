@@ -3,7 +3,7 @@
 import 'package:flutter/material.dart';
 import 'package:aj_maintain/theme/theme.dart';
 import 'package:aj_maintain/service/service.dart';
-import 'package:printing/printing.dart';
+// import 'package:printing/printing.dart';
 import 'package:blue_thermal_printer/blue_thermal_printer.dart';
 
 class ReturnProductUpdate extends StatefulWidget {
@@ -38,21 +38,21 @@ class _ReturnProductUpdateState extends State<ReturnProductUpdate> {
       details = List<Map<String, dynamic>>.from(res['details']);
     }
 
-    try {
-      bool? isConnected = await printer.isConnected;
-      if (!isConnected!) {
-        List<BluetoothDevice> devices = await printer.getBondedDevices();
-        BluetoothDevice? targetPrinter = devices.firstWhere(
-          (d) => d.name!.contains("KP306A-UB"),
-          orElse: () => devices.first,
-        );
-        await printer.connect(targetPrinter);
-      }
-    } catch (e) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text("Cannot connect to printer")));
-    }
+    // try {
+    //   bool? isConnected = await printer.isConnected;
+    //   if (!isConnected!) {
+    //     List<BluetoothDevice> devices = await printer.getBondedDevices();
+    //     BluetoothDevice? targetPrinter = devices.firstWhere(
+    //       (d) => d.name!.contains("KP306A-UB"),
+    //       orElse: () => devices.first,
+    //     );
+    //     await printer.connect(targetPrinter);
+    //   }
+    // } catch (e) {
+    //   ScaffoldMessenger.of(
+    //     context,
+    //   ).showSnackBar(SnackBar(content: Text("Cannot connect to printer")));
+    // }
     setState(() => isLoading = false);
   }
 
@@ -64,19 +64,18 @@ class _ReturnProductUpdateState extends State<ReturnProductUpdate> {
   //   await Printing.layoutPdf(onLayout: (format) async => pdfBytes);
   // }
 
- Future<void> printReturnReceipt(
-  BuildContext context,
-  Map<String, dynamic>? header,
-  List<Map<String, dynamic>> details,
-) async {
-  // 🟩 OPTION 1: Direct Thermal (faster)
-  await PdfService.printThermalReceipt(
-    context: context,
-    header: header!,
-    details: details,
-  );
-}
-
+  Future<void> printReturnReceipt(
+    BuildContext context,
+    Map<String, dynamic>? header,
+    List<Map<String, dynamic>> details,
+  ) async {
+    // 🟩 OPTION 1: Direct Thermal (faster)
+    await PdfService.printThermalReceipt(
+      context: context,
+      header: header!,
+      details: details,
+    );
+  }
 
   Future<void> updateReturn() async {
     double total = details.fold(

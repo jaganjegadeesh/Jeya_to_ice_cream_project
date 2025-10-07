@@ -41,7 +41,6 @@ class _AssignProductUpdateState extends State<AssignProductUpdate> {
         'subtotal': quantity * price,
       };
     }).toList();
-    print(data!['details']);
     _recalculateTotal();
     setState(() => isLoading = false);
 

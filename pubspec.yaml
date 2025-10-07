@@ -34,4 +34,4 @@ flutter:
       - assets/icons/
 flutter_icons:
   android: true
-  image_path: "assets/icons/j_icon.png"
+  image_path: "assets/icons/aj_logo.png"

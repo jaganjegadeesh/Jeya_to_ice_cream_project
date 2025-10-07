@@ -31,7 +31,6 @@ class ProductService {
       }
       return true;
     } catch (e) {
-      print('Error deleting Product: $e');
       return false;
     }
   }
@@ -137,7 +136,6 @@ class ProductService {
 
       return true;
     } catch (e) {
-      print("❌ assignProducts error: $e");
       return false;
     }
   }
@@ -248,7 +246,6 @@ class ProductService {
       }
       return true;
     } catch (e) {
-      print('Error deleting Assignment: $e');
       return false;
     }
   }
