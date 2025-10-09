@@ -14,8 +14,9 @@ class ReceiptList extends StatefulWidget {
 class _ReceiptListState extends State<ReceiptList> {
   final PaymentService _service = PaymentService();
   List<Map<String, dynamic>> receiptList = [];
-  bool isLoading = true;
-
+  bool isLoading = false;
+  DateTime filterFromDate = DateTime.now().subtract(const Duration(days: 7));
+  DateTime filterToDate = DateTime.now();
   @override
   void initState() {
     super.initState();
@@ -23,7 +24,10 @@ class _ReceiptListState extends State<ReceiptList> {
   }
 
   Future<void> loadReceipt() async {
-    receiptList = await _service.getReceiptList();
+    setState(() {
+      isLoading = true;
+    });
+    receiptList = await _service.getReceiptList(filterFromDate,filterToDate);
     setState(() {
       isLoading = false;
     });
@@ -61,83 +65,156 @@ class _ReceiptListState extends State<ReceiptList> {
       ),
       body: isLoading
           ? const Center(child: CircularProgressIndicator())
-          : receiptList.isEmpty
-          ? const Center(child: Text("No Receipt found"))
-          : ListView.builder(
-              itemCount: receiptList.length,
-              itemBuilder: (context, index) {
-                final item = receiptList[index];
-                return Card(
-                  margin: const EdgeInsets.symmetric(
-                    horizontal: 12,
-                    vertical: 6,
-                  ),
-                  child: ListTile(
-                    title: Text("Bill No: ${item['bill_no']}"),
-                    subtitle: Text("Retailer: ${item['retailer_name']}"),
-                    trailing: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Column(
-                          crossAxisAlignment: CrossAxisAlignment.end,
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Text("₹${item['total_amount']}"),
-                            Text(
-                              DateFormat(
-                                'dd-MM-yyyy',
-                              ).format(DateTime.parse(item['date'])),
-                            ),
-                          ],
+          : Column(
+            children: [
+              SizedBox(height: 20,),
+              Row(
+                  children: [
+                    SizedBox(width: 10,),
+                    Expanded(
+                      child: TextFormField(
+                        readOnly: true,
+                        decoration: InputDecoration(
+                          labelText: 'From Date',
+                          suffixIcon: IconButton(
+                            icon: const Icon(Icons.calendar_today),
+                            onPressed: () async {
+                              final picked = await showDatePicker(
+                                context: context,
+                                initialDate: filterFromDate,
+                                firstDate: DateTime(2025),
+                                lastDate: filterToDate,
+                              );
+                              if (picked != null) {
+                                setState(() {
+                                  filterFromDate = picked;
+                                });
+                                loadReceipt();
+                              }
+                            },
+                          ),
                         ),
-                        IconButton(
-                          icon: Icon(Icons.delete, color: Colors.red),
-                          onPressed: () async {
-                            // Confirm before deleting
-                            await showDialog<bool>(
-                              context: context,
-                              builder: (context) => AlertDialog(
-                                title: const Text('Delete Assignment'),
-                                content: const Text(
-                                  'Are you sure you want to delete this assignment?',
-                                ),
-                                actions: [
-                                  TextButton(
-                                    onPressed: () =>
-                                        Navigator.pop(context, false),
-                                    child: const Text('Cancel'),
-                                  ),
-                                  TextButton(
-                                    onPressed: () =>
-                                        Navigator.pop(context, true),
-                                    child: const Text('Delete'),
+                        controller: TextEditingController(
+                          text: DateFormat('yyyy-MM-dd').format(filterFromDate),
+                        ),
+                      ),
+                    ),
+                    SizedBox(width: 10,),
+                    Expanded(
+                      child: TextFormField(
+                        readOnly: true,
+                        decoration: InputDecoration(
+                          labelText: 'To Date',
+                          suffixIcon: IconButton(
+                            icon: const Icon(Icons.calendar_today),
+                            onPressed: () async {
+                              final picked = await showDatePicker(
+                                context: context,
+                                initialDate: filterToDate,
+                                firstDate: filterFromDate,
+                                lastDate: DateTime.now(),
+                              );
+                              if (picked != null) {
+                                setState(() {
+                                  filterToDate = picked;
+                                });
+                                loadReceipt();
+                              }
+                            },
+                          ),
+                        ),
+                        controller: TextEditingController(
+                          text: DateFormat('yyyy-MM-dd').format(filterToDate),
+                        ),
+                      ),
+                    ),
+                    SizedBox(width: 10,),
+                  ],
+                ),
+              SizedBox(height: 20,),
+              receiptList.isEmpty
+              ? const Center(child: Text("No Receipt found"))
+              : Expanded(
+                child: ListView.builder(
+                    itemCount: receiptList.length,
+                    itemBuilder: (context, index) {
+                      final item = receiptList[index];
+                      return Card(
+                        margin: const EdgeInsets.symmetric(
+                          horizontal: 12,
+                          vertical: 6,
+                        ),
+                        child: ListTile(
+                          title: Text("Bill No: ${item['bill_no']}"),
+                          subtitle: Text("Retailer: ${item['retailer_name']}"),
+                          trailing: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Column(
+                                crossAxisAlignment: CrossAxisAlignment.end,
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Text("₹${item['total_amount']}"),
+                                  Text(
+                                    DateFormat(
+                                      'dd-MM-yyyy',
+                                    ).format(DateTime.parse(item['date'])),
                                   ),
                                 ],
                               ),
+                              IconButton(
+                                icon: Icon(Icons.delete, color: Colors.red),
+                                onPressed: () async {
+                                  // Confirm before deleting
+                                  await showDialog<bool>(
+                                    context: context,
+                                    builder: (context) => AlertDialog(
+                                      title: const Text('Delete Recepit'),
+                                      content: Text(
+                                        item['status'] == '0' ?
+                                        'Are you sure you want to delete this receipt?' : "Can't Delete This",
+                                      ),
+                                      actions: [
+                                        TextButton(
+                                          onPressed: () =>
+                                              Navigator.pop(context, false),
+                                          child: Text(item['status'] == '0' ? 'Cancel' : 'ok'),
+                                        ),
+                                        if(item['status'] == '0' )
+                                        TextButton(
+                                          onPressed: () async => {
+                                            await _service.deleteReceipt(
+                                              item['bill_no'],
+                                            ),
+                                            await loadReceipt(),
+                                              Navigator.pop(context, true),
+                                          },
+                                          child: const Text('Delete'),
+                                        ),
+                                      ],
+                                    ),
+                                  );
+                                 
+                                },
+                              ),
+                            ],
+                          ),
+                          onTap: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (_) =>
+                                    ReceiptUpdate(receiptId: item['id']),
+                              ),
                             );
-                            // if (confirm == true) {
-                            //   await _service.deleteAssignProduct(
-                            //     item['bill_no'],
-                            //   );
-                            //   await loadReceipt();
-                            // }
                           },
-                        ),
-                      ],
-                    ),
-                    onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (_) =>
-                              ReceiptUpdate(receiptId: item['id']),
                         ),
                       );
                     },
                   ),
-                );
-              },
-            ),
+              ),
+            ],
+          ),
     );
   }
 }

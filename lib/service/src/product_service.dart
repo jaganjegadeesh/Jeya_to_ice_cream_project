@@ -3,6 +3,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:aj_maintain/constant/constant.dart';
 import 'package:aj_maintain/model/model.dart';
+import 'package:intl/intl.dart';
 
 class ProductService {
   FirebaseFirestore firebase = FirebaseFirestore.instance;
@@ -35,10 +36,24 @@ class ProductService {
     }
   }
 
-  Future<List<Map<String, dynamic>>> getAssignedList() async {
+  Future<List<Map<String, dynamic>>> getAssignedList(
+    DateTime filterFromDate,
+    DateTime filterToDate,
+  ) async {
     final querySnapshot = await firebase
         .collection(Constants.assign_header_table)
+        .where(
+          "date",
+          isGreaterThanOrEqualTo: DateFormat(
+            'yyyy-MM-dd',
+          ).format(filterFromDate),
+        )
+        .where(
+          "date",
+          isLessThanOrEqualTo: DateFormat('yyyy-MM-dd').format(filterToDate),
+        )
         .where("status", isEqualTo: "assigned")
+        .orderBy("date")
         .orderBy("bill_no", descending: true)
         .get();
 
@@ -250,10 +265,24 @@ class ProductService {
     }
   }
 
-  Future<List<Map<String, dynamic>>> getReturnedList() async {
+  Future<List<Map<String, dynamic>>> getReturnedList(
+    DateTime filterFromDate,
+    DateTime filterToDate,
+  ) async {
     try {
       final snapshot = await firebase
           .collection(Constants.return_header_table)
+          .where(
+          "date",
+          isGreaterThanOrEqualTo: DateFormat(
+            'yyyy-MM-dd',
+          ).format(filterFromDate),
+        )
+        .where(
+          "date",
+          isLessThanOrEqualTo: DateFormat('yyyy-MM-dd').format(filterToDate),
+        )
+          .orderBy("date")
           .orderBy("createdDateTime", descending: true)
           .get();
 
@@ -364,6 +393,7 @@ class ProductService {
     double billTotal = 0,
     required double finalAmount,
     required double percentage,
+    required String receiptIds,
     required List<Map<String, dynamic>> products,
   }) async {
     try {
@@ -428,6 +458,7 @@ class ProductService {
           "advance": advance,
           "final_amount": billAmount,
           "percentage": percentage,
+          "receipt_ids" : receiptIds,
           "createdDateTime": DateTime.now().toString().substring(0, 19),
           "updateDateTime": DateTime.now().toString().substring(0, 19),
         });
@@ -468,13 +499,12 @@ class ProductService {
       for (var doc in assignHeaders.docs) {
         await doc.reference.update({"status": "returned"});
       }
-      final receipt = await firebase
-          .collection(Constants.receipt_table)
-          .where("retailer_id", isEqualTo: retailerId)
-          .get();
+      List<String> ids = receiptIds.split(',').map((e) => e.trim()).toList();
 
-      for (var doc in receipt.docs) {
-        await doc.reference.update({"status": "1"});
+      for (String id in ids) {
+        await firebase.collection(Constants.receipt_table).doc(id).update({
+          "status": "1",
+        });
       }
 
       return {"success": true, "bill_no": billNo, "id": id};
@@ -559,5 +589,9 @@ class ProductService {
     }
   }
 
-  // get the bill no data
+  Future<void> deleteReturnProduct(item) async {
+
+  }
+
+  
 }

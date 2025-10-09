@@ -2,13 +2,25 @@
 
 import 'package:aj_maintain/constant/constant.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:intl/intl.dart';
 
 class PaymentService {
   FirebaseFirestore firebase = FirebaseFirestore.instance;
 
-  Future<List<Map<String, dynamic>>> getReceiptList() async {
+  Future<List<Map<String, dynamic>>> getReceiptList(DateTime filterFromDate, DateTime filterToDate) async {
     final querySnapshot = await firebase
         .collection(Constants.receipt_table)
+        .where(
+          "date",
+          isGreaterThanOrEqualTo: DateFormat(
+            'yyyy-MM-dd',
+          ).format(filterFromDate),
+        )
+        .where(
+          "date",
+          isLessThanOrEqualTo: DateFormat('yyyy-MM-dd').format(filterToDate),
+        )
+        .orderBy("date")
         .orderBy("bill_no", descending: true)
         .get();
 
@@ -23,6 +35,7 @@ class PaymentService {
         "date": headerData["date"],
         "total_amount": headerData["amount"],
         "retailer_name": headerData['retailer_name'],
+        "status": headerData['status'],
       });
     }
 
@@ -137,6 +150,22 @@ class PaymentService {
       } else {
         return false;
       }
+    } catch (e) {
+      return false;
+    }
+  }
+  Future<bool> deleteReceipt(String billNo) async {
+    try {
+      final querySnapshot = await firebase
+          .collection(Constants.receipt_table)
+          .where('bill_no', isEqualTo: billNo)
+          .get();
+
+      for (var doc in querySnapshot.docs) {
+        // Then delete the header document
+        await doc.reference.delete();
+      }
+      return true;
     } catch (e) {
       return false;
     }

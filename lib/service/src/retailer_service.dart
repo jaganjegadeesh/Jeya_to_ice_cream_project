@@ -65,25 +65,32 @@ class RetailerService {
     return retailers;
   }
 
-  Future<double> getRetailerAdvance(String retailerId) async {
+  Future<Map<String, dynamic>> getRetailerAdvance(String retailerId) async {
+    String ids = '';
+    double total = 0;
     try {
       final querySnapshot = await firebase
           .collection(Constants.receipt_table)
           .where('status', isEqualTo: '0')
           .where('retailer_id', isEqualTo: retailerId)
           .get();
-      double total = 0;
       if (querySnapshot.docs.isNotEmpty) {
         for (var doc in querySnapshot.docs) {
           final amount = double.tryParse(doc.data()['amount'].toString()) ?? 0;
+          if (ids.isEmpty) {
+            ids = doc.id;
+          } else {
+            ids = "$ids,${doc.id}";
+          }
           total += amount;
         }
-        return total;
+
+        return {'total': total, 'ids': ids};
       } else {
-        return 0;
+        return {'total': total, 'ids': ids};
       }
     } catch (e) {
-      return 0;
+      return {'total': total, 'ids': ids};
     }
   }
 }

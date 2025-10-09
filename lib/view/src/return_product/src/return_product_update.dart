@@ -23,7 +23,7 @@ class _ReturnProductUpdateState extends State<ReturnProductUpdate> {
 
   bool isLoading = true;
   double? advance;
-
+  String? receiptIds;
   @override
   void initState() {
     super.initState();
@@ -91,9 +91,11 @@ class _ReturnProductUpdateState extends State<ReturnProductUpdate> {
       retailerId: header?['retailer_id'].toString() ?? '',
       date: header?['date'] ?? '',
       total: total,
+      advance: header?['advance'],
       finalAmount: finalAmount,
       percentage: percent,
       products: details,
+      receiptIds : receiptIds!
     );
 
     if (result['success']) {
@@ -153,11 +155,11 @@ class _ReturnProductUpdateState extends State<ReturnProductUpdate> {
             Text('Bill No: ${header?['bill_no']}'),
             const Divider(),
             Expanded(
-              child: Column(
-                children: [
-                  SingleChildScrollView(
-                    scrollDirection: Axis.horizontal,
-                    child: DataTable(
+              child: SingleChildScrollView(
+                child: Column(
+                  children: [
+                    DataTable(
+                      columnSpacing: 10,
                       columns: const [
                         DataColumn(label: Text('Product')),
                         DataColumn(label: Text('Qty')),
@@ -176,7 +178,7 @@ class _ReturnProductUpdateState extends State<ReturnProductUpdate> {
                             double.tryParse(item['price'].toString()) ?? 0.0;
                         final balance = qty - returnQty;
                         item['amount'] = balance * price;
-
+                    
                         return DataRow(
                           cells: [
                             DataCell(Text(item['name'])),
@@ -205,11 +207,8 @@ class _ReturnProductUpdateState extends State<ReturnProductUpdate> {
                         );
                       }).toList(),
                     ),
-                  ),
-                  const Divider(),
-                  SingleChildScrollView(
-                    scrollDirection: Axis.vertical,
-                    child: Column(
+                    const Divider(),
+                    Column(
                       children: [
                         Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -299,8 +298,8 @@ class _ReturnProductUpdateState extends State<ReturnProductUpdate> {
                         ],
                       ],
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
             ),
           ],

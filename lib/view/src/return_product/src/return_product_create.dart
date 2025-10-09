@@ -23,11 +23,12 @@ class _ReturnProductCreateState extends State<ReturnProductCreate> {
 
   String? selectedRetailerId;
   String billNo = '';
+  String receiptIds = '';
   DateTime selectedDate = DateTime.now();
   bool isLoading = false;
   bool ischangeRetailer = false;
   double percent = 0.0;
-  double? advance; 
+  double? advance;
   bool isSubmit = false;
 
   @override
@@ -56,7 +57,9 @@ class _ReturnProductCreateState extends State<ReturnProductCreate> {
     percent = double.tryParse(percentageData['percentage'].toString()) ?? 0.0;
     Map<String, Map<String, dynamic>> productMap = {};
 
-    final recived = await _retailerService.getRetailerAdvance(retailerId);
+    final recivedList = await _retailerService.getRetailerAdvance(retailerId);
+    final recived = recivedList['total'];
+    receiptIds = recivedList['ids'];
     for (var item in assignedProducts) {
       var details = item['details'] as List<dynamic>;
       for (var detail in details) {
@@ -64,18 +67,19 @@ class _ReturnProductCreateState extends State<ReturnProductCreate> {
         final name = detail['name'];
         final quantity = int.tryParse(detail['quantity'].toString()) ?? 0;
         final price = double.tryParse(detail['price'].toString()) ?? 0.0;
-
-        if (productMap.containsKey(id)) {
-          productMap[id]!['quantity'] += quantity;
-        } else {
-          productMap[id] = {
-            'product_id': id,
-            'name': name,
-            'quantity': quantity,
-            'price': price,
-            'return_quantity': 0,
-            'amount': 0.0,
-          };
+        if(quantity > 0) {
+          if (productMap.containsKey(id)) {
+            productMap[id]!['quantity'] += quantity;
+          } else {
+            productMap[id] = {
+              'product_id': id,
+              'name': name,
+              'quantity': quantity,
+              'price': price,
+              'return_quantity': 0,
+              'amount': 0.0,
+            };
+          }
         }
       }
     }
@@ -130,19 +134,20 @@ class _ReturnProductCreateState extends State<ReturnProductCreate> {
       ),
     );
 
-    if (confirm != true)  { 
-      setState(() => isSubmit = false); 
-      return; 
+    if (confirm != true) {
+      setState(() => isSubmit = false);
+      return;
     }
     final response = await _returnService.saveReturn(
       retailerId: selectedRetailerId!,
       date: DateFormat('yyyy-MM-dd').format(selectedDate),
       total: subtotal,
-      billTotal : total,
-      advance : advance!,
+      billTotal: total,
+      advance: advance!,
       finalAmount: advanceTotal,
       percentage: percent,
       products: selectedProducts,
+      receiptIds: receiptIds,
     );
 
     if (response['success'] == true) {
@@ -174,9 +179,11 @@ class _ReturnProductCreateState extends State<ReturnProductCreate> {
         ),
         actions: [
           isSubmit
-          ? const Center(child: CircularProgressIndicator())
-          :
-          IconButton(icon: const Icon(Icons.check), onPressed: submitReturn),
+              ? const Center(child: CircularProgressIndicator())
+              : IconButton(
+                  icon: const Icon(Icons.check),
+                  onPressed: submitReturn,
+                ),
         ],
       ),
       body: Padding(
@@ -228,12 +235,11 @@ class _ReturnProductCreateState extends State<ReturnProductCreate> {
             ischangeRetailer
                 ? const Center(child: CircularProgressIndicator())
                 : Expanded(
-                    child: Column(
-                      children: [
-                        SingleChildScrollView(
-                          scrollDirection: Axis.horizontal,
-                          child: DataTable(
-                            columnSpacing: 12,
+                    child: SingleChildScrollView(
+                      child: Column(
+                        children: [
+                          DataTable(
+                            columnSpacing: 10,
                             columns: const [
                               DataColumn(label: Text('Product')),
                               DataColumn(label: Text('Qty')),
@@ -253,15 +259,61 @@ class _ReturnProductCreateState extends State<ReturnProductCreate> {
                                   DataCell(
                                     SizedBox(
                                       width: 50,
-                                      child: TextFormField(
-                                        initialValue: returnQty.toString(),
-                                        keyboardType: TextInputType.number,
-                                        onChanged: (val) {
-                                          final newQty = int.tryParse(val) ?? 0;
-                                          setState(() {
-                                            item['return_quantity'] = newQty;
-                                            calculateTotal();
-                                          });
+                                      child: StatefulBuilder(
+                                        builder: (context, setInnerState) {
+                                          int currentQty =
+                                              item['return_quantity'] ??
+                                              returnQty;
+                          
+                                          return TextFormField(
+                                            initialValue: currentQty
+                                                .toString(),
+                                            keyboardType:
+                                                TextInputType.number,
+                                            style: TextStyle(
+                                              color: currentQty >= qty
+                                                  ? Colors.red
+                                                  : Colors
+                                                        .black, // text color
+                                            ),
+                                            decoration: InputDecoration(
+                                              isDense: true,
+                                              contentPadding:
+                                                  const EdgeInsets.symmetric(
+                                                    horizontal: 8,
+                                                    vertical: 8,
+                                                  ),
+                                              enabledBorder: OutlineInputBorder(
+                                                borderSide: BorderSide(
+                                                  color: currentQty >= qty
+                                                      ? Colors.red
+                                                      : Colors
+                                                            .grey, // normal border
+                                                ),
+                                              ),
+                                              focusedBorder: OutlineInputBorder(
+                                                borderSide: BorderSide(
+                                                  color: currentQty >= qty
+                                                      ? Colors.red
+                                                      : Colors
+                                                            .blue, // focus border
+                                                  width: 2,
+                                                ),
+                                              ),
+                                            ),
+                                            onChanged: (val) {
+                                              final newQty =
+                                                  int.tryParse(val) ?? 0;
+                                              setState(() {
+                                                item['return_quantity'] =
+                                                    newQty;
+                                                calculateTotal();
+                                              });
+                                              setInnerState(
+                                                () {},
+                                              ); // rebuild inner state to refresh color & border
+                                            },
+                                          );
                                         },
                                       ),
                                     ),
@@ -281,104 +333,102 @@ class _ReturnProductCreateState extends State<ReturnProductCreate> {
                               );
                             }).toList(),
                           ),
-                        ),
-                        const Divider(),
-                        Column(
-                          children: [
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: [
-                                Text(
-                                  "Subtotal:",
-                                  style: TextStyle(
-                                    fontWeight: FontWeight.bold,
-                                    fontSize: 17,
-                                  ),
-                                ),
-                                Text(
-                                  "₹${subtotal.toStringAsFixed(2)}",
-                                  style: TextStyle(fontSize: 17),
-                                ),
-                              ],
-                            ),
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: [
-                                Text(
-                                  "Retailer % Cut ($percent%):",
-                                  style: TextStyle(
-                                    fontWeight: FontWeight.bold,
-                                    fontSize: 17,
-                                  ),
-                                ),
-                                Text(
-                                  "₹${percentageAmount.toStringAsFixed(2)}",
-                                  style: TextStyle(fontSize: 17),
-                                ),
-                              ],
-                            ),
-                            const Divider(),
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: [
-                                Text(
-                                  "Total:",
-                                  style: TextStyle(
-                                    fontWeight: FontWeight.bold,
-                                    fontSize: 17,
-                                  ),
-                                ),
-                                Text(
-                                  "₹${total.toStringAsFixed(2)}",
-                                  style: TextStyle(fontSize: 17),
-                                ),
-                              ],
-                            ),
-                            if (advance != 0 && advance != null) ...[
-                              const Divider(),
+                          const Divider(),
+                          Column(
+                            children: [
                               Row(
                                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                 children: [
                                   Text(
-                                    "Recived:",
+                                    "Subtotal:",
                                     style: TextStyle(
                                       fontWeight: FontWeight.bold,
                                       fontSize: 17,
                                     ),
                                   ),
                                   Text(
-                                    "₹${advance?.toStringAsFixed(2)}",
+                                    "₹${subtotal.toStringAsFixed(2)}",
+                                    style: TextStyle(fontSize: 17),
+                                  ),
+                                ],
+                              ),
+                              Row(
+                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                children: [
+                                  Text(
+                                    "Retailer % Cut ($percent%):",
+                                    style: TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 17,
+                                    ),
+                                  ),
+                                  Text(
+                                    "₹${percentageAmount.toStringAsFixed(2)}",
                                     style: TextStyle(fontSize: 17),
                                   ),
                                 ],
                               ),
                               const Divider(),
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: [
-                                Text(
-                                  "Total:",
-                                  style: TextStyle(
-                                    fontWeight: FontWeight.bold,
-                                    fontSize: 17,
+                              Row(
+                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                children: [
+                                  Text(
+                                    "Total:",
+                                    style: TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 17,
+                                    ),
                                   ),
+                                  Text(
+                                    "₹${total.toStringAsFixed(2)}",
+                                    style: TextStyle(fontSize: 17),
+                                  ),
+                                ],
+                              ),
+                              if (advance != 0 && advance != null) ...[
+                                const Divider(),
+                                Row(
+                                  mainAxisAlignment:
+                                      MainAxisAlignment.spaceBetween,
+                                  children: [
+                                    Text(
+                                      "Recived:",
+                                      style: TextStyle(
+                                        fontWeight: FontWeight.bold,
+                                        fontSize: 17,
+                                      ),
+                                    ),
+                                    Text(
+                                      "₹${advance?.toStringAsFixed(2)}",
+                                      style: TextStyle(fontSize: 17),
+                                    ),
+                                  ],
                                 ),
-                                Text(
-                                  "₹${advanceTotal.toStringAsFixed(2)}",
-                                  style: TextStyle(fontSize: 17),
+                                const Divider(),
+                                Row(
+                                  mainAxisAlignment:
+                                      MainAxisAlignment.spaceBetween,
+                                  children: [
+                                    Text(
+                                      "Total:",
+                                      style: TextStyle(
+                                        fontWeight: FontWeight.bold,
+                                        fontSize: 17,
+                                      ),
+                                    ),
+                                    Text(
+                                      "₹${advanceTotal.toStringAsFixed(2)}",
+                                      style: TextStyle(fontSize: 17),
+                                    ),
+                                  ],
                                 ),
                               ],
-                            ),
                             ],
-
-                            
-                          ],
-                        ),
-                      ],
+                          ),
+                        ],
+                      ),
                     ),
                   ),
-
-           
           ],
         ),
       ),
