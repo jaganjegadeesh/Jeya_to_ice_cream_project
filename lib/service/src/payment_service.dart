@@ -1,6 +1,7 @@
 // ignore_for_file: unused_local_variable
 
 import 'package:aj_maintain/constant/constant.dart';
+import 'package:aj_maintain/service/service.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:intl/intl.dart';
 
@@ -48,6 +49,8 @@ class PaymentService {
     required int amount,
   }) async {
     try {
+      dynamic userData = await Db.getData();
+
       final headerRef = firebase.collection(Constants.receipt_table);
 
       // 🔁 Generate next bill number
@@ -81,6 +84,8 @@ class PaymentService {
         "status": "0",
         "createdDateTime": DateTime.now().toString().substring(0, 19),
         "updateDateTime": DateTime.now().toString().substring(0, 19),
+        "creator": userData?['userId'],
+        "creator_name": userData?['name']
       });
 
       return true;

@@ -1,5 +1,6 @@
 // ignore_for_file: use_build_context_synchronously, deprecated_member_use
 
+import 'package:aj_maintain/service/service.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:aj_maintain/theme/theme.dart';
@@ -24,15 +25,13 @@ class _RetailerCreateState extends State<RetailerCreate> {
 
   bool _isLoading = false;
 
-
-
   Future<void> _submit() async {
+    dynamic userData = await Db.getData();
+
     if (!_formKey.currentState!.validate()) return;
     setState(() {
       _isLoading = true;
     });
-
-    
 
     try {
       await firebase.collection(Constants.retailer_table).add({
@@ -42,7 +41,9 @@ class _RetailerCreateState extends State<RetailerCreate> {
         "percentage": _percentageController.text,
         "retailerId": randomAlphaNumeric(10),
         "createdDateTime": DateTime.now().toString().substring(0, 19),
-        "updateDateTime" : DateTime.now().toString().substring(0, 19),
+        "updateDateTime": DateTime.now().toString().substring(0, 19),
+        "creator": userData?['userId'],
+        "creator_name": userData?['name'],
       });
 
       if (!mounted) return;
@@ -57,7 +58,6 @@ class _RetailerCreateState extends State<RetailerCreate> {
       );
 
       Navigator.pop(context, true);
-
     } catch (e) {
       if (!mounted) return;
       setState(() {
@@ -69,22 +69,23 @@ class _RetailerCreateState extends State<RetailerCreate> {
     }
 
     Navigator.pop(context, true);
-    
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar( iconTheme: IconThemeData(
+      appBar: AppBar(
+        iconTheme: IconThemeData(
           color: AppTheme
-              .appTheme.indicatorColor, // ✅ This changes the back button color
+              .appTheme
+              .indicatorColor, // ✅ This changes the back button color
         ),
         backgroundColor: AppTheme.appTheme.primaryColor,
         title: Text(
           'Add Retailer',
           style: TextStyle(color: AppTheme.appTheme.indicatorColor),
         ),
-    ),
+      ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: _isLoading
@@ -97,29 +98,36 @@ class _RetailerCreateState extends State<RetailerCreate> {
                       TextFormField(
                         controller: _nameController,
                         decoration: const InputDecoration(labelText: 'Name'),
-                        validator: (v) => v == null || v.isEmpty ? 'Enter name' : null,
+                        validator: (v) =>
+                            v == null || v.isEmpty ? 'Enter name' : null,
                       ),
-                      
+
                       TextFormField(
                         controller: _phoneController,
                         decoration: const InputDecoration(labelText: 'Phone'),
-                        validator: (v) => v == null || v.isEmpty ? 'Enter phone' : null,
+                        validator: (v) =>
+                            v == null || v.isEmpty ? 'Enter phone' : null,
                       ),
                       TextFormField(
                         controller: _passwordController,
-                        decoration: const InputDecoration(labelText: 'Password'),
-                        obscureText: true,
-                        validator: (v) => v == null || v.isEmpty ? 'Enter password' : null,
-                      ),
-                        TextFormField(
-                          controller: _percentageController,
-                          decoration: const InputDecoration(labelText: 'Percentage'),
-                          keyboardType: TextInputType.number,
-                          validator: (v) => (v == null || v.isEmpty)
-                                  ? 'Enter percentage'
-                                  : null,
+                        decoration: const InputDecoration(
+                          labelText: 'Password',
                         ),
-                      
+                        obscureText: true,
+                        validator: (v) =>
+                            v == null || v.isEmpty ? 'Enter password' : null,
+                      ),
+                      TextFormField(
+                        controller: _percentageController,
+                        decoration: const InputDecoration(
+                          labelText: 'Percentage',
+                        ),
+                        keyboardType: TextInputType.number,
+                        validator: (v) => (v == null || v.isEmpty)
+                            ? 'Enter percentage'
+                            : null,
+                      ),
+
                       const SizedBox(height: 16),
                       ElevatedButton(
                         onPressed: _submit,

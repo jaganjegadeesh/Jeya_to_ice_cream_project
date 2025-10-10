@@ -1,3 +1,5 @@
+// ignore_for_file: use_build_context_synchronously
+
 import 'package:aj_maintain/view/view.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';

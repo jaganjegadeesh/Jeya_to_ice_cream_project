@@ -1,5 +1,6 @@
 // ignore_for_file: avoid_print, unnecessary_null_comparison
 
+import 'package:aj_maintain/service/service.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:aj_maintain/constant/constant.dart';
 import 'package:aj_maintain/model/model.dart';
@@ -92,6 +93,8 @@ class ProductService {
     required List<Map<String, dynamic>> selectedProducts,
   }) async {
     try {
+      dynamic userData = await Db.getData();
+
       final headerRef = firebase.collection(Constants.assign_header_table);
 
       // 🔁 Generate next bill number
@@ -119,6 +122,8 @@ class ProductService {
         "status": "assigned",
         "createdDateTime": DateTime.now().toString().substring(0, 19),
         "updateDateTime": DateTime.now().toString().substring(0, 19),
+        "creator": userData?['userId'],
+        "creator_name": userData?['name'],
       });
       // 💾 Insert details
       final detailRef = newHeader.collection("details"); // subcollection
@@ -404,6 +409,8 @@ class ProductService {
     required String assignIds,
   }) async {
     try {
+      dynamic userData = await Db.getData();
+
       String billNo;
       double billAmount;
       final headerCollection = firebase.collection(
@@ -467,6 +474,8 @@ class ProductService {
           "assignIds": assignIds,
           "createdDateTime": DateTime.now().toString().substring(0, 19),
           "updateDateTime": DateTime.now().toString().substring(0, 19),
+          "creator": userData?['userId'],
+          "creator_name": userData?['name'],
         });
 
         id = headerRef.id;

@@ -1,4 +1,4 @@
-// ignore_for_file: deprecated_member_use
+// ignore_for_file: deprecated_member_use, use_build_context_synchronously
 
 import 'package:aj_maintain/view/view.dart';
 import 'package:flutter/material.dart';
@@ -33,19 +33,15 @@ class _RetailerListState extends State<RetailerList> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        iconTheme: IconThemeData(
-          color: AppTheme
-              .appTheme.indicatorColor,
-        ),
+        iconTheme: IconThemeData(color: AppTheme.appTheme.indicatorColor),
         backgroundColor: AppTheme.appTheme.primaryColor,
-        title: Text('Retailer',
-            style: TextStyle(color: AppTheme.appTheme.indicatorColor)),
+        title: Text(
+          'Retailer',
+          style: TextStyle(color: AppTheme.appTheme.indicatorColor),
+        ),
         actions: [
           IconButton(
-            icon: Icon(
-              Icons.add,
-              color: AppTheme.appTheme.indicatorColor,
-            ),
+            icon: Icon(Icons.add, color: AppTheme.appTheme.indicatorColor),
             onPressed: () async {
               // Navigate to Add Screen, wait for result, refresh list if needed
               final result = await Navigator.push(
@@ -56,7 +52,7 @@ class _RetailerListState extends State<RetailerList> {
                 _refresh();
               }
             },
-          )
+          ),
         ],
       ),
       body: FutureBuilder<List<RetailerModel>>(
@@ -68,60 +64,71 @@ class _RetailerListState extends State<RetailerList> {
               itemCount: retailerList.length,
               itemBuilder: (context, index) {
                 final s = retailerList[index];
-                return ListTile(
-                  leading: const Icon(Icons.person),
-                  title: Text(s.name),
-                  subtitle: Text('Phone: ${s.phone} | %: ${s.percentage}'),
-                  trailing: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      IconButton(
-                        icon: const Icon(Icons.edit, color: Colors.blue),
-                        onPressed: () async {
-                          final result = await Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (_) => RetailerUpdate(retailerModel: s),
+                return retailerList.isEmpty
+                    ? const Center(child: Text("No Product Found"))
+                    : ListTile(
+                        leading: const Icon(Icons.person),
+                        title: Text(s.name),
+                        subtitle: Text(
+                          'Phone: ${s.phone} | %: ${s.percentage}',
+                        ),
+                        trailing: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            IconButton(
+                              icon: const Icon(Icons.edit, color: Colors.blue),
+                              onPressed: () async {
+                                final result = await Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (_) =>
+                                        RetailerUpdate(retailerModel: s),
+                                  ),
+                                );
+                                if (result == true) _refresh();
+                              },
                             ),
-                          );
-                          if (result == true) _refresh();
-                        },
-                      ),
-                      IconButton(
-                        icon: const Icon(Icons.delete, color: Colors.red),
-                        onPressed: () async {
-                          final canDelete = await _service.getRetailerStatus(s.retailerId);
-                          final confirm = await showDialog<bool>(
-                            context: context,
-                            builder: (context) => AlertDialog(
-                              title: const Text('Delete Product'),
-                              content: Text(
-                                canDelete == 1 ? 'Are you sure you want to delete this Product?' : "Can not Delete This Product",
-                              ),
-                              actions: [
-                                TextButton(
-                                  onPressed: () =>
-                                      Navigator.pop(context, false),
-                                  child: Text(canDelete == 1 ? 'Cancel' : "Ok"),
-                                ),
-                                if(canDelete == 1)
-                                TextButton(
-                                  onPressed: () => Navigator.pop(context, true),
-                                  child: const Text('Delete'),
-                                ),
-                              ],
+                            IconButton(
+                              icon: const Icon(Icons.delete, color: Colors.red),
+                              onPressed: () async {
+                                final canDelete = await _service
+                                    .getRetailerStatus(s.retailerId);
+                                final confirm = await showDialog<bool>(
+                                  context: context,
+                                  builder: (context) => AlertDialog(
+                                    title: const Text('Delete Product'),
+                                    content: Text(
+                                      canDelete == 1
+                                          ? 'Are you sure you want to delete this Product?'
+                                          : "Can not Delete This Product",
+                                    ),
+                                    actions: [
+                                      TextButton(
+                                        onPressed: () =>
+                                            Navigator.pop(context, false),
+                                        child: Text(
+                                          canDelete == 1 ? 'Cancel' : "Ok",
+                                        ),
+                                      ),
+                                      if (canDelete == 1)
+                                        TextButton(
+                                          onPressed: () =>
+                                              Navigator.pop(context, true),
+                                          child: const Text('Delete'),
+                                        ),
+                                    ],
+                                  ),
+                                );
+                                if (confirm == true) {
+                                  await _service.deleteRetailer(s.retailerId);
+                                  _refresh();
+                                }
+                              },
                             ),
-                          );
-                          if (confirm == true) {
-                             await _service.deleteRetailer(s.retailerId);
-                            _refresh();
-                          }
-                        },
-                      ),
-                    ],
-                  ),
-                );
-              }, 
+                          ],
+                        ),
+                      );
+              },
             );
           } else if (snapshot.hasError) {
             return Center(child: Text('Error: ${snapshot.error}'));

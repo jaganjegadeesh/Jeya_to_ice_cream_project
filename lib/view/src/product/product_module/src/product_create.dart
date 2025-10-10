@@ -1,10 +1,12 @@
 // ignore_for_file: use_build_context_synchronously, deprecated_member_use
 
+import 'package:aj_maintain/service/service.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:aj_maintain/theme/theme.dart';
 import 'package:aj_maintain/constant/constant.dart';
 import 'package:random_string/random_string.dart';
+import 'package:aj_maintain/model/model.dart';
 
 class ProductCreate extends StatefulWidget {
   const ProductCreate({super.key});
@@ -16,6 +18,7 @@ class ProductCreate extends StatefulWidget {
 class _ProductCreateState extends State<ProductCreate> {
   final _formKey = GlobalKey<FormState>();
   FirebaseFirestore firebase = FirebaseFirestore.instance;
+  UserModel? user;
 
   final TextEditingController _nameController = TextEditingController();
   final TextEditingController _priceController = TextEditingController();
@@ -23,6 +26,8 @@ class _ProductCreateState extends State<ProductCreate> {
   bool _isLoading = false;
 
   Future<void> _submit() async {
+    dynamic userData = await Db.getData();
+
     if (!_formKey.currentState!.validate()) return;
 
     setState(() {
@@ -33,7 +38,10 @@ class _ProductCreateState extends State<ProductCreate> {
       final headerRef = firebase.collection(Constants.product_table);
 
       // 🔁 Generate next bill number
-      final snapshot = await headerRef.orderBy("product_no", descending: true).limit(1).get();
+      final snapshot = await headerRef
+          .orderBy("product_no", descending: true)
+          .limit(1)
+          .get();
       int nextNumber = 1;
       if (snapshot.docs.isNotEmpty) {
         final lastBillNo = snapshot.docs.first.data()["product_no"];
@@ -49,7 +57,9 @@ class _ProductCreateState extends State<ProductCreate> {
         "productId": randomAlphaNumeric(10),
         "product_no": billNo,
         "createdDateTime": DateTime.now().toString().substring(0, 19),
-        "updateDateTime" : DateTime.now().toString().substring(0, 19),
+        "updateDateTime": DateTime.now().toString().substring(0, 19),
+        "creator": userData?['userId'],
+        "creator_name": userData?['name'],
       });
 
       if (!mounted) return;
@@ -64,7 +74,6 @@ class _ProductCreateState extends State<ProductCreate> {
       );
 
       Navigator.pop(context, true);
-
     } catch (e) {
       if (!mounted) return;
       setState(() {
