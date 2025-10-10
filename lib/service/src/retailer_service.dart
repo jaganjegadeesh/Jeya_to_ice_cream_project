@@ -93,4 +93,32 @@ class RetailerService {
       return {'total': total, 'ids': ids};
     }
   }
+
+  Future<bool> deleteRetailer(id) async {
+    try {
+      final querySnapshot = await firebase
+          .collection(Constants.retailer_table)
+          .where('retailerId', isEqualTo: id)
+          .get();
+
+      for (var doc in querySnapshot.docs) {
+        await doc.reference.delete();
+      }
+      return true;
+    } catch (e) {
+      return false;
+    }
+  }
+
+  Future getRetailerStatus(String retailerId) async {
+    final querySnapshot = await firebase
+        .collection(Constants.assign_header_table)
+        .where("retailer_id", isEqualTo: retailerId)
+        .get();
+    if (querySnapshot.docs.isNotEmpty) {
+      return 0;
+    } else {
+      return 1;
+    }
+  }
 }

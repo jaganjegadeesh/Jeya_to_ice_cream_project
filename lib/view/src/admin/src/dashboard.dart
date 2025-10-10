@@ -72,117 +72,144 @@ class _AdminDashboardState extends State<AdminDashboard> {
                 ),
               ),
             ),
-            if (login_user_role == 'Super Admin')
-              // Product with nested menu
-              ExpansionTile(
-                leading: const Icon(Icons.add_moderator_outlined),
-                title: const Text('Admin'),
+
+            // Main menu items
+            Expanded(
+              child: ListView(
+                padding: EdgeInsets.zero,
                 children: [
-                  ListTile(
-                    leading: const Icon(Icons.business_outlined),
-                    title: const Text("Company"),
-                    onTap: () {
-                      Navigator.pop(context);
-                      // Navigator.push(
-                      //   context,
-                      //   MaterialPageRoute(builder: (context) => const SalesProductScreen()),
-                      // );
-                    },
+                  if (login_user_role == 'Super Admin')
+                    ExpansionTile(
+                      leading: const Icon(Icons.add_moderator_outlined),
+                      title: const Text('Admin'),
+                      children: [
+                        ListTile(
+                          leading: const Icon(
+                            Icons.supervised_user_circle_rounded,
+                          ),
+                          title: const Text("User"),
+                          onTap: () {
+                            Navigator.pop(context);
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => const UserList(),
+                              ),
+                            );
+                          },
+                        ),
+                      ],
+                    ),
+                  ExpansionTile(
+                    leading: const Icon(Icons.production_quantity_limits),
+                    title: const Text('Creation'),
+                    children: [
+                      ListTile(
+                        leading: const Icon(Icons.shopping_bag),
+                        title: const Text("Product"),
+                        onTap: () {
+                          Navigator.pop(context);
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => const ProductList(),
+                            ),
+                          );
+                        },
+                      ),
+                      ListTile(
+                        leading: const Icon(Icons.boy_rounded),
+                        title: const Text("Retailer"),
+                        onTap: () {
+                          Navigator.pop(context);
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => const RetailerList(),
+                            ),
+                          );
+                        },
+                      ),
+                    ],
                   ),
                   ListTile(
-                    leading: const Icon(Icons.supervised_user_circle_rounded),
-                    title: const Text("User"),
+                    leading: const Icon(Icons.assignment_add),
+                    title: const Text('Assign Product'),
                     onTap: () {
                       Navigator.pop(context);
                       Navigator.push(
                         context,
                         MaterialPageRoute(
-                          builder: (context) => const UserList(),
+                          builder: (context) => const AssignProductList(),
                         ),
                       );
                     },
                   ),
+                  ListTile(
+                    leading: const Icon(Icons.currency_rupee),
+                    title: const Text('Receipt'),
+                    onTap: () {
+                      Navigator.pop(context);
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const ReceiptList(),
+                        ),
+                      );
+                    },
+                  ),
+                  ListTile(
+                    leading: const Icon(Icons.reset_tv_rounded),
+                    title: const Text('Return Product'),
+                    onTap: () {
+                      Navigator.pop(context);
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const ReturnProductList(),
+                        ),
+                      );
+                    },
+                  ),
+                  ExpansionTile(
+                    leading: const Icon(Icons.report),
+                    title: const Text('Report'),
+                    children: [
+                      ListTile(
+                        leading: const Icon(Icons.assignment_outlined),
+                        title: const Text("Collection"),
+                        onTap: () {
+                          Navigator.pop(context);
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => const CollectionReport(),
+                            ),
+                          );
+                        },
+                      ),
+                    ],
+                  ),
                 ],
               ),
-            ExpansionTile(
-              leading: const Icon(Icons.production_quantity_limits),
-              title: const Text('Creation'),
-              children: [
-                ListTile(
-                  leading: const Icon(Icons.shopping_bag),
-                  title: const Text("Product"),
-                  onTap: () {
-                    Navigator.pop(context);
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => const ProductList(),
-                      ),
-                    );
-                  },
-                ),
-                ListTile(
-                  leading: const Icon(Icons.boy_rounded),
-                  title: const Text("Retailer"),
-                  onTap: () {
-                    Navigator.pop(context);
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => const RetailerList(),
-                      ),
-                    );
-                  },
-                ),
-              ],
             ),
-            ListTile(
-              leading: const Icon(Icons.production_quantity_limits),
-              title: const Text('Assign Product'),
-              onTap: () {
-                Navigator.pop(context);
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => const AssignProductList(),
-                  ),
-                );
-              },
-            ),
-            ListTile(
-              leading: const Icon(Icons.currency_rupee),
-              title: const Text('Receipt'),
-              onTap: () {
-                Navigator.pop(context);
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (context) => const ReceiptList()),
-                );
-              },
-            ),
-            ListTile(
-              leading: const Icon(Icons.reset_tv_rounded),
-              title: const Text('Return Product'),
-              onTap: () {
-                Navigator.pop(context);
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => const ReturnProductList(),
-                  ),
-                );
-              },
-            ),
-            ListTile(
-              leading: const Icon(Icons.logout),
-              title: const Text('Logout'),
-              onTap: () {
-                logout();
-              },
+
+            // Logout at the bottom
+            const Divider(),
+            Padding(
+              padding: const EdgeInsets.only(bottom: 30),
+              child: ListTile(
+                leading: const Icon(Icons.logout, color: Colors.red),
+                title: const Text('Logout', style: TextStyle(color: Colors.red)),
+                onTap: () {
+                  logout();
+                },
+              ),
             ),
           ],
         ),
       ),
+
       body: const Center(
         child: Text('Dashboard Content', style: TextStyle(fontSize: 24)),
       ),

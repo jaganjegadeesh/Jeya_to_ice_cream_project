@@ -273,15 +273,15 @@ class ProductService {
       final snapshot = await firebase
           .collection(Constants.return_header_table)
           .where(
-          "date",
-          isGreaterThanOrEqualTo: DateFormat(
-            'yyyy-MM-dd',
-          ).format(filterFromDate),
-        )
-        .where(
-          "date",
-          isLessThanOrEqualTo: DateFormat('yyyy-MM-dd').format(filterToDate),
-        )
+            "date",
+            isGreaterThanOrEqualTo: DateFormat(
+              'yyyy-MM-dd',
+            ).format(filterFromDate),
+          )
+          .where(
+            "date",
+            isLessThanOrEqualTo: DateFormat('yyyy-MM-dd').format(filterToDate),
+          )
           .orderBy("date")
           .orderBy("createdDateTime", descending: true)
           .get();
@@ -319,6 +319,7 @@ class ProductService {
   Future<List<Map<String, dynamic>>> getAssignedProductsForRetailer(
     String retailerId,
   ) async {
+    String assignIds = '';
     final querySnapshot = await firebase
         .collection(Constants.assign_header_table)
         .where("status", isEqualTo: 'assigned')
@@ -332,7 +333,11 @@ class ProductService {
 
     for (final doc in querySnapshot.docs) {
       final headerData = doc.data();
-
+      if (assignIds.isEmpty) {
+        assignIds = doc.id;
+      } else {
+        assignIds = "$assignIds,${doc.id}";
+      }
       // 🔹 Fetch details from subcollection
       final detailsSnap = await firebase
           .collection(Constants.assign_header_table)
@@ -373,6 +378,7 @@ class ProductService {
 
       allDetails.add({
         "id": doc.id,
+        "assignIds": assignIds,
         "bill_no": headerData["bill_no"],
         "date": headerData["date"],
         "total_amount": headerData["total_amount"],
@@ -389,12 +395,13 @@ class ProductService {
     required String retailerId,
     required String date,
     required double total,
-    double advance = 0,
-    double billTotal = 0,
+    required double advance,
+    required double billTotal,
     required double finalAmount,
     required double percentage,
     required String receiptIds,
     required List<Map<String, dynamic>> products,
+    required String assignIds,
   }) async {
     try {
       String billNo;
@@ -432,8 +439,6 @@ class ProductService {
         billNo =
             (await headerCollection.doc(id).get()).data()?["bill_no"] ?? "";
       } else {
-        // ➕ Insert new return
-        // Generate bill number (Firestore doesn’t have auto increment → we’ll query last)
         final query = await headerCollection
             .orderBy("bill_no", descending: true)
             .limit(1)
@@ -458,7 +463,8 @@ class ProductService {
           "advance": advance,
           "final_amount": billAmount,
           "percentage": percentage,
-          "receipt_ids" : receiptIds,
+          "receipt_ids": receiptIds,
+          "assignIds": assignIds,
           "createdDateTime": DateTime.now().toString().substring(0, 19),
           "updateDateTime": DateTime.now().toString().substring(0, 19),
         });
@@ -575,6 +581,7 @@ class ProductService {
           "id": headerDoc.id,
           "bill_no": headerData?["bill_no"],
           "retailer_id": headerData?["retailer_id"],
+          "receipt_ids": headerData?["receipt_ids"],
           "retailer_name": retailername,
           "date": headerData?["date"],
           "advance": headerData?["advance"],
@@ -589,9 +596,71 @@ class ProductService {
     }
   }
 
-  Future<void> deleteReturnProduct(item) async {
+  Future<bool> deleteReturnProduct(String billNo) async {
+    try {
+      final querySnapshot = await firebase
+          .collection(Constants.return_header_table)
+          .where('bill_no', isEqualTo: billNo)
+          .get();
 
+      if (querySnapshot.docs.isEmpty) {
+        print('No return records found for bill_no: $billNo');
+        return false;
+      }
+
+      for (var doc in querySnapshot.docs) {
+        final data = doc.data();
+
+        // --- Handle receipt updates ---
+        final receiptId = (data['receiptIds'] ?? '').toString();
+        if (receiptId.isNotEmpty) {
+          final ids = receiptId
+              .split(',')
+              .map((e) => e.trim())
+              .where((e) => e.isNotEmpty);
+          for (final id in ids) {
+            await firebase.collection(Constants.receipt_table).doc(id).update({
+              "status": "0",
+            });
+          }
+        }
+
+        // --- Handle assign updates ---
+        final assignId = (data['assignIds'] ?? '').toString();
+        if (assignId.isNotEmpty) {
+          final ids = assignId
+              .split(',')
+              .map((e) => e.trim())
+              .where((e) => e.isNotEmpty);
+          for (final id in ids) {
+            await firebase
+                .collection(Constants.assign_header_table)
+                .doc(id)
+                .update({"status": "assigned"});
+          }
+        }
+
+        // --- Delete the return document ---
+        await doc.reference.delete();
+      }
+
+      return true;
+    } catch (e, stack) {
+      print('Error deleting return product: $e');
+      print(stack);
+      return false;
+    }
   }
 
-  
+  Future<int> getProductStatus(String productId) async {
+    final querySnapshot = await firebase
+        .collectionGroup("details")
+        .where("productId", isEqualTo: productId)
+        .get();
+    if (querySnapshot.docs.isNotEmpty) {
+      return 0;
+    } else {
+      return 1;
+    }
+  }
 }

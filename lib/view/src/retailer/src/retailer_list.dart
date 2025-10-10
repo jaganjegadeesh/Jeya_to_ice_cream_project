@@ -90,14 +90,38 @@ class _RetailerListState extends State<RetailerList> {
                       IconButton(
                         icon: const Icon(Icons.delete, color: Colors.red),
                         onPressed: () async {
-                          // await _service.deleteRetailer(s.id);
-                          // _refresh();
+                          final canDelete = await _service.getRetailerStatus(s.retailerId);
+                          final confirm = await showDialog<bool>(
+                            context: context,
+                            builder: (context) => AlertDialog(
+                              title: const Text('Delete Product'),
+                              content: Text(
+                                canDelete == 1 ? 'Are you sure you want to delete this Product?' : "Can not Delete This Product",
+                              ),
+                              actions: [
+                                TextButton(
+                                  onPressed: () =>
+                                      Navigator.pop(context, false),
+                                  child: Text(canDelete == 1 ? 'Cancel' : "Ok"),
+                                ),
+                                if(canDelete == 1)
+                                TextButton(
+                                  onPressed: () => Navigator.pop(context, true),
+                                  child: const Text('Delete'),
+                                ),
+                              ],
+                            ),
+                          );
+                          if (confirm == true) {
+                             await _service.deleteRetailer(s.retailerId);
+                            _refresh();
+                          }
                         },
                       ),
                     ],
                   ),
                 );
-              },
+              }, 
             );
           } else if (snapshot.hasError) {
             return Center(child: Text('Error: ${snapshot.error}'));

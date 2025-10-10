@@ -24,6 +24,7 @@ class _ReturnProductCreateState extends State<ReturnProductCreate> {
   String? selectedRetailerId;
   String billNo = '';
   String receiptIds = '';
+  String assignIds = '';
   DateTime selectedDate = DateTime.now();
   bool isLoading = false;
   bool ischangeRetailer = false;
@@ -49,7 +50,6 @@ class _ReturnProductCreateState extends State<ReturnProductCreate> {
     assignedProducts = await _returnService.getAssignedProductsForRetailer(
       retailerId,
     );
-
     // Get percentage value via API call
     final percentageData = await _retailerService.getRetailersPercentage(
       retailerId,
@@ -60,6 +60,7 @@ class _ReturnProductCreateState extends State<ReturnProductCreate> {
     final recivedList = await _retailerService.getRetailerAdvance(retailerId);
     final recived = recivedList['total'];
     receiptIds = recivedList['ids'];
+    var ids = '';
     for (var item in assignedProducts) {
       var details = item['details'] as List<dynamic>;
       for (var detail in details) {
@@ -81,14 +82,18 @@ class _ReturnProductCreateState extends State<ReturnProductCreate> {
             };
           }
         }
+        ids = item['assignIds'];
       }
     }
 
     selectedProducts = productMap.values.toList();
     calculateTotal();
-    setState(() {});
+    setState(() {
+      assignIds = ids;
+    });
     setState(() => ischangeRetailer = false);
     setState(() => advance = recived);
+
   }
 
   void calculateTotal() {
@@ -148,6 +153,7 @@ class _ReturnProductCreateState extends State<ReturnProductCreate> {
       percentage: percent,
       products: selectedProducts,
       receiptIds: receiptIds,
+      assignIds : assignIds
     );
 
     if (response['success'] == true) {

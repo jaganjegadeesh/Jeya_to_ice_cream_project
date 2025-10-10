@@ -81,7 +81,7 @@ class _LoginState extends State<Login> {
         ),
       );
 
-     Navigator.push(
+      Navigator.push(
         context,
         MaterialPageRoute(builder: (_) => const AdminDashboard()),
       );
@@ -100,7 +100,6 @@ class _LoginState extends State<Login> {
         body: SafeArea(
           child: Column(
             children: [
-              // 🔹 Top coral section
               Expanded(
                 flex: 3,
                 child: Container(
@@ -127,7 +126,7 @@ class _LoginState extends State<Login> {
                   width: double.infinity,
                   color: Colors.white,
                   padding: const EdgeInsets.symmetric(
-                    horizontal: 24,
+                    horizontal: 30,
                     vertical: 20,
                   ),
                   child: SingleChildScrollView(
@@ -160,6 +159,7 @@ class _LoginState extends State<Login> {
                               prefixIcon: Icon(Icons.email_outlined),
                               hintText: "demo@email.com",
                               border: UnderlineInputBorder(),
+                              fillColor: Colors.transparent
                             ),
                             validator: (String? value) {
                               if (value == null || value.isEmpty) {
@@ -190,6 +190,7 @@ class _LoginState extends State<Login> {
                               prefixIcon: const Icon(Icons.lock_outline),
                               hintText: "Enter your password",
                               border: const UnderlineInputBorder(),
+                              fillColor: Colors.transparent,
                               suffixIcon: IconButton(
                                 icon: Icon(
                                   _obscureText
@@ -227,17 +228,6 @@ class _LoginState extends State<Login> {
                                 activeColor: const Color(0xFFFF6F61),
                               ),
                               const Text("Remember Me"),
-                              const Spacer(),
-                              GestureDetector(
-                                onTap: () {},
-                                child: const Text(
-                                  "Forgot Password?",
-                                  style: TextStyle(
-                                    color: Color(0xFFFF6F61),
-                                    fontWeight: FontWeight.w500,
-                                  ),
-                                ),
-                              ),
                             ],
                           ),
                           const SizedBox(height: 20),
@@ -280,59 +270,6 @@ class _LoginState extends State<Login> {
                           const SizedBox(height: 20),
 
                           // Google Button
-                          SizedBox(
-                            width: double.infinity,
-                            child: OutlinedButton(
-                              style: OutlinedButton.styleFrom(
-                                padding: const EdgeInsets.symmetric(
-                                  vertical: 16,
-                                ),
-                                side: const BorderSide(color: Colors.black12),
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(8),
-                                ),
-                              ),
-                              onPressed: () {},
-                              child: Row(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: [
-                                  SvgPicture.asset(
-                                    "assets/icons/google.svg",
-                                    width: 20,
-                                    height: 20,
-                                  ),
-                                  const SizedBox(width: 8),
-                                  const Text("Sign Up with Google"),
-                                ],
-                              ),
-                            ),
-                          ),
-                          const SizedBox(height: 20),
-
-                          // Register link
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              const Text("Don’t have an Account ? "),
-                              GestureDetector(
-                                onTap: () {
-                                  Navigator.push(
-                                    context,
-                                    MaterialPageRoute(
-                                      builder: (context) => const Register(),
-                                    ),
-                                  );
-                                },
-                                child: const Text(
-                                  "Sign up",
-                                  style: TextStyle(
-                                    color: Color(0xFFFF6F61),
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
                         ],
                       ),
                     ),

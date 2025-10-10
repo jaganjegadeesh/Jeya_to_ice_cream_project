@@ -20,6 +20,7 @@ class _ReturnProductUpdateState extends State<ReturnProductUpdate> {
 
   Map<String, dynamic>? header;
   List<Map<String, dynamic>> details = [];
+  bool isSubmit = false;
 
   bool isLoading = true;
   double? advance;
@@ -78,6 +79,30 @@ class _ReturnProductUpdateState extends State<ReturnProductUpdate> {
   }
 
   Future<void> updateReturn() async {
+    setState(() => isSubmit = true);
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text("Confirm"),
+        content: const Text("Are you sure you want to submit this return?"),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: const Text("Cancel"),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.of(context).pop(true),
+            child: const Text("Yes, Submit"),
+          ),
+        ],
+      ),
+    );
+
+    if (confirm != true) {
+      setState(() => isSubmit = false);
+      return;
+    }
+
     double total = details.fold(
       0.0,
       (sum, item) => sum + (item['amount'] ?? 0.0),
@@ -85,17 +110,19 @@ class _ReturnProductUpdateState extends State<ReturnProductUpdate> {
     double percent =
         double.tryParse(header?['percentage'].toString() ?? '0') ?? 0.0;
     double finalAmount = total - (total * percent / 100);
-
+    double billTotal = finalAmount - header?['advance']!;
     final result = await _service.saveReturn(
       id: widget.headerId,
       retailerId: header?['retailer_id'].toString() ?? '',
       date: header?['date'] ?? '',
       total: total,
       advance: header?['advance'],
-      finalAmount: finalAmount,
+      finalAmount: billTotal,
       percentage: percent,
       products: details,
-      receiptIds : receiptIds!
+      receiptIds : header?['receipt_ids']!, 
+      billTotal: finalAmount,
+      assignIds : header?['assignId']
     );
 
     if (result['success']) {
@@ -108,6 +135,7 @@ class _ReturnProductUpdateState extends State<ReturnProductUpdate> {
         SnackBar(content: Text(result['message'] ?? 'Update failed')),
       );
     }
+    setState(() => isSubmit = false);
   }
 
   double get subtotal =>
@@ -142,7 +170,12 @@ class _ReturnProductUpdateState extends State<ReturnProductUpdate> {
               await printReturnReceipt(context, header, details);
             },
           ),
-          IconButton(icon: const Icon(Icons.check), onPressed: updateReturn),
+          isSubmit
+              ? const Center(child: CircularProgressIndicator())
+              : IconButton(
+                  icon: const Icon(Icons.check),
+                  onPressed: updateReturn,
+                ),
         ],
       ),
       body: Padding(
