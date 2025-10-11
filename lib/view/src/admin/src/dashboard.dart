@@ -200,7 +200,10 @@ class _AdminDashboardState extends State<AdminDashboard> {
               padding: const EdgeInsets.only(bottom: 30),
               child: ListTile(
                 leading: const Icon(Icons.logout, color: Colors.red),
-                title: const Text('Logout', style: TextStyle(color: Colors.red)),
+                title: const Text(
+                  'Logout',
+                  style: TextStyle(color: Colors.red),
+                ),
                 onTap: () {
                   logout();
                 },
@@ -210,9 +213,7 @@ class _AdminDashboardState extends State<AdminDashboard> {
         ),
       ),
 
-      body: const Center(
-        child: Text('Dashboard Content', style: TextStyle(fontSize: 24)),
-      ),
+      body: BarChartSample1(),
     );
   }
 }

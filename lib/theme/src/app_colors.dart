@@ -30,4 +30,6 @@ class AppColors {
   static Color black12 = Colors.black12;
   static Color white60 = Colors.white60;
   static Color white54 = Colors.white54;
+  static Color pink = Colors.pinkAccent;
+  static Color purple = Colors.purple;
 }

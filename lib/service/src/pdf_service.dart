@@ -164,6 +164,7 @@ class PdfService {
       await printer.printNewLine();
       await printer.printCustom("Thank You!", 1, 1);
       await printer.printNewLine();
+      await printer.printNewLine();
 
       // ⚠️ Some printers crash on paperCut() — comment it out
       // await printer.paperCut();

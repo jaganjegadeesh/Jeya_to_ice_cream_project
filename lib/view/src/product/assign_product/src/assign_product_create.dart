@@ -134,106 +134,114 @@ class _AssignProductCreateState extends State<AssignProductCreate> {
       ),
       body: isLoading
           ? const Center(child: CircularProgressIndicator())
-          : Padding(
-              padding: const EdgeInsets.all(12.0),
-              child: Column(
-                children: [
-                  DropdownButtonFormField<String>(
-                    value: selectedRetailerId,
-                    decoration: const InputDecoration(labelText: 'Retailer'),
-                    items: retailers
-                        .map(
-                          (r) => DropdownMenuItem<String>(
-                            value: r.retailerId,
-                            child: Text("${r.name} - ${r.phone}"),
-                          ),
-                        )
-                        .toList(),
-                    onChanged: (value) {
-                      setState(() {
-                        selectedRetailerId = value!;
-                      });
-                    },
-                  ),
-                  const SizedBox(height: 12),
-                  TextFormField(
-                    readOnly: true,
-                    decoration: InputDecoration(
-                      labelText: 'Date',
-                      suffixIcon: IconButton(
-                        icon: const Icon(Icons.calendar_today),
-                        onPressed: () async {
-                          final picked = await showDatePicker(
-                            context: context,
-                            initialDate: selectedDate,
-                            firstDate: DateTime(2020),
-                            lastDate: DateTime(2100),
-                          );
-                          if (picked != null) {
-                            setState(() {
-                              selectedDate = picked;
-                            });
-                          }
-                        },
-                      ),
-                    ),
-                    controller: TextEditingController(
-                      text: DateFormat('yyyy-MM-dd').format(selectedDate),
-                    ),
-                  ),
-                  const SizedBox(height: 12),
-                  Expanded(
-                    child: ListView(
-                      children: products.map((product) {
-                        final productId = product.productId;
-                        final name = product.name;
-                        final price =
-                            double.tryParse(product.price.toString()) ?? 0.0;
-                        final qty =
-                            int.tryParse(
-                              _qtyControllers[productId]?.text ?? '0',
-                            ) ??
-                            0;
-                        final subtotal = price * qty;
-
-                        return Card(
-                          child: ListTile(
-                            title: Text('$name (₹$price)'),
-                            subtitle: Padding(
-                              padding: const EdgeInsets.only(top: 10.0),
-                              child: TextField(
-                                controller: _qtyControllers[productId],
-                                keyboardType: TextInputType.number,
-                                decoration: const InputDecoration(
-                                  labelText: 'Quantity',
+          : Stack(
+            children: [
+               if(isSubmit)
+              const Center(child: CircularProgressIndicator()),
+                Opacity( opacity:  isSubmit ? 0.0 : 1.0,
+                  child: Padding(
+                    padding: const EdgeInsets.all(12.0),
+                    child: Column(
+                      children: [
+                        DropdownButtonFormField<String>(
+                          value: selectedRetailerId,
+                          decoration: const InputDecoration(labelText: 'Retailer'),
+                          items: retailers
+                              .map(
+                                (r) => DropdownMenuItem<String>(
+                                  value: r.retailerId,
+                                  child: Text("${r.name} - ${r.phone}"),
                                 ),
-                                onChanged: (_) => setState(() {}),
-                              ),
-                            ),
-                            trailing: Text('₹${subtotal.toStringAsFixed(2)}'),
-                          ),
-                        );
-                      }).toList(),
-                    ),
-                  ),
-                  const SizedBox(height: 10),
-                  Text(
-                    'Total: ₹${_calculateTotal().toStringAsFixed(2)}',
-                    style: const TextStyle(
-                      fontWeight: FontWeight.bold,
-                      fontSize: 16,
-                    ),
-                  ),
-                  const SizedBox(height: 10),
-                  isSubmit
-                      ? const Center(child: CircularProgressIndicator())
-                      : ElevatedButton(
-                          onPressed: _submit,
-                          child: const Text('Assign Products'),
+                              )
+                              .toList(),
+                          onChanged: (value) {
+                            setState(() {
+                              selectedRetailerId = value!;
+                            });
+                          },
                         ),
-                ],
-              ),
-            ),
+                        const SizedBox(height: 12),
+                        TextFormField(
+                          readOnly: true,
+                          decoration: InputDecoration(
+                            labelText: 'Date',
+                            suffixIcon: IconButton(
+                              icon: const Icon(Icons.calendar_today),
+                              onPressed: () async {
+                                final picked = await showDatePicker(
+                                  context: context,
+                                  initialDate: selectedDate,
+                                  firstDate: DateTime(2020),
+                                  lastDate: DateTime(2100),
+                                );
+                                if (picked != null) {
+                                  setState(() {
+                                    selectedDate = picked;
+                                  });
+                                }
+                              },
+                            ),
+                          ),
+                          controller: TextEditingController(
+                            text: DateFormat('yyyy-MM-dd').format(selectedDate),
+                          ),
+                        ),
+                        const SizedBox(height: 12),
+                        Expanded(
+                          child: ListView(
+                            children: products.map((product) {
+                              final productId = product.productId;
+                              final name = product.name;
+                              final price =
+                                  double.tryParse(product.price.toString()) ?? 0.0;
+                              final qty =
+                                  int.tryParse(
+                                    _qtyControllers[productId]?.text ?? '0',
+                                  ) ??
+                                  0;
+                              final subtotal = price * qty;
+                                          
+                              return Card(
+                                child: ListTile(
+                                  title: Text('$name (₹$price)'),
+                                  subtitle: Padding(
+                                    padding: const EdgeInsets.only(top: 10.0),
+                                    child: TextField(
+                                      controller: _qtyControllers[productId],
+                                      keyboardType: TextInputType.number,
+                                      decoration: const InputDecoration(
+                                        labelText: 'Quantity',
+                                      ),
+                                      onChanged: (_) => setState(() {}),
+                                    ),
+                                  ),
+                                  trailing: Text('₹${subtotal.toStringAsFixed(2)}'),
+                                ),
+                              );
+                            }).toList(),
+                          ),
+                        ),
+                        const SizedBox(height: 10),
+                        Text(
+                          'Total: ₹${_calculateTotal().toStringAsFixed(2)}',
+                          style: const TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 16,
+                          ),
+                        ),
+                        const SizedBox(height: 10),
+                        isSubmit
+                            ? const Center(child: CircularProgressIndicator())
+                            : ElevatedButton(
+                                onPressed: _submit,
+                                child: const Text('Assign Products'),
+                              ),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
+          ),
     );
   }
 }

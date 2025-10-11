@@ -6,3 +6,4 @@ export 'src/retailer/retailer.dart';
 export 'src/return_product/return_product.dart';
 export 'src/receipt/receipt.dart';
 export 'src/reports/reports.dart';
+export 'src/charts/charts.dart';
