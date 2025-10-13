@@ -54,7 +54,6 @@ class ProductService {
           isLessThanOrEqualTo: DateFormat('yyyy-MM-dd').format(filterToDate),
         )
         .where("status", isEqualTo: "assigned")
-        .orderBy("date")
         .orderBy("bill_no", descending: true)
         .get();
 
@@ -287,8 +286,7 @@ class ProductService {
             "date",
             isLessThanOrEqualTo: DateFormat('yyyy-MM-dd').format(filterToDate),
           )
-          .orderBy("date")
-          .orderBy("createdDateTime", descending: true)
+          .orderBy("bill_no", descending: true)
           .get();
 
       final List<Map<String, dynamic>> returnedList = [];

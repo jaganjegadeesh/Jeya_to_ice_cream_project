@@ -8,7 +8,10 @@ import 'package:intl/intl.dart';
 class PaymentService {
   FirebaseFirestore firebase = FirebaseFirestore.instance;
 
-  Future<List<Map<String, dynamic>>> getReceiptList(DateTime filterFromDate, DateTime filterToDate) async {
+  Future<List<Map<String, dynamic>>> getReceiptList(
+    DateTime filterFromDate,
+    DateTime filterToDate,
+  ) async {
     final querySnapshot = await firebase
         .collection(Constants.receipt_table)
         .where(
@@ -21,7 +24,6 @@ class PaymentService {
           "date",
           isLessThanOrEqualTo: DateFormat('yyyy-MM-dd').format(filterToDate),
         )
-        .orderBy("date")
         .orderBy("bill_no", descending: true)
         .get();
 
@@ -85,7 +87,7 @@ class PaymentService {
         "createdDateTime": DateTime.now().toString().substring(0, 19),
         "updateDateTime": DateTime.now().toString().substring(0, 19),
         "creator": userData?['userId'],
-        "creator_name": userData?['name']
+        "creator_name": userData?['name'],
       });
 
       return true;
@@ -159,6 +161,7 @@ class PaymentService {
       return false;
     }
   }
+
   Future<bool> deleteReceipt(String billNo) async {
     try {
       final querySnapshot = await firebase

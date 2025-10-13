@@ -8,7 +8,7 @@ class BarChartSample1 extends StatefulWidget {
   BarChartSample1({super.key});
 
   final Color barBackgroundColor = Colors.black12;
-  final Color barColor = AppColors.amber700;
+  final Color barColor = AppColors.blue;
   final Color touchedBarColor = AppColors.greenColor;
 
   @override
@@ -45,9 +45,9 @@ class _BarChartSample1State extends State<BarChartSample1> {
         .getLastSevenDaysCollections();
 
     // Rotate data so last bar is today
-    int todayIndex = DateTime.now().weekday - 1; // 0-based
+    // 0-based
     last7DaysData = List.generate(7, (i) {
-      int index = (i + data.length - 7) % 7; // ensures 7 items
+      int index = (i + data.length - 7) % 7;
       return data[index];
     });
 
@@ -58,7 +58,7 @@ class _BarChartSample1State extends State<BarChartSample1> {
   Widget build(BuildContext context) {
     return Column(
       children: [
-        SizedBox(height: 50,),
+        SizedBox(height: 50),
         AspectRatio(
           aspectRatio: 1.25,
           child: Padding(
@@ -145,7 +145,6 @@ class _BarChartSample1State extends State<BarChartSample1> {
                 'dd MMM',
               ).format(DateTime.parse(dateStr));
             } catch (_) {}
-
             return BarTooltipItem(
               '${rotatedDays[groupIndex]} ($formattedDate)\n₹${amount.toStringAsFixed(2)}',
               const TextStyle(color: Colors.black87, fontSize: 14),

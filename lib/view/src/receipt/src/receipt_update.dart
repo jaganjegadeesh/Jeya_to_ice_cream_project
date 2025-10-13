@@ -48,12 +48,12 @@ class _ReceiptUpdateState extends State<ReceiptUpdate> {
     retailers = await _retailerService.getRetailer();
     final res = await _service.getReceiptDetail(widget.receiptId);
     setState(() {
-      selectedRetailerId = res['retailer_id'];
+      selectedRetailerId = res['header']['retailer_id'];
       _dateController.text = DateFormat(
         'yyyy-MM-dd',
-      ).format(DateTime.parse(res['date']));
-      _amountController.text = res['amount'].toString();
-      status = res['status'];
+      ).format(DateTime.parse(res['header']['date']));
+      _amountController.text = res['header']['amount'].toString();
+      status = res['header']['status'];
       isLoading = false;
     });
   }
@@ -123,6 +123,7 @@ class _ReceiptUpdateState extends State<ReceiptUpdate> {
               padding: const EdgeInsets.all(8.0),
               child: Column(
                 children: [
+                  SizedBox(height: 25,),
                   DropdownButtonFormField<String>(
                     value: selectedRetailerId,
                     decoration: const InputDecoration(labelText: 'Retailer'),

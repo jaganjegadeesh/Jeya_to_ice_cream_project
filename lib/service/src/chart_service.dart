@@ -4,7 +4,7 @@ import 'package:intl/intl.dart';
 
 class ChartService {
   FirebaseFirestore firebase = FirebaseFirestore.instance;
-  DateTime filterFromDate = DateTime.now().subtract(const Duration(days: 7));
+  DateTime filterFromDate = DateTime.now().subtract(const Duration(days: 6));
   DateTime filterToDate = DateTime.now();
 
   Future<List<Map<String, dynamic>>> getLastSevenDaysCollections() async {
@@ -100,7 +100,7 @@ class ChartService {
 
       totalByDateList.add({"date": formattedDate, "total_amount": total});
     }
-    print(totalByDateList);
+
     return totalByDateList;
   }
 }
